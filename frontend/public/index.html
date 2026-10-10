@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132d3a">
+  <meta name="description" content="WeatherWise — прогноз погоды и советы для планирования дня.">
+  <title>WeatherWise — погода и советы</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="WeatherWise — главная">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" fill="none" role="img">
+            <circle cx="25.5" cy="13.5" r="7" fill="#F5C86A" />
+            <path d="M11.5 29.5h17a6 6 0 0 0 .2-12 9 9 0 0 0-17.1 2.1 5 5 0 0 0-.1 9.9Z" fill="#FFFFFF" />
+            <path d="M12 33h14" stroke="#B5D5D8" stroke-width="2.5" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="brand-word">weather<span>wise</span></span>
+      </a>
+      <div class="header-meta">
+        <span class="status-dot" id="connectionDot" aria-hidden="true"></span>
+        <span id="connectionStatus" role="status" aria-live="polite">Ожидаем данные</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro-row">
+        <div class="intro-copy">
+          <p class="eyebrow">ПОГОДА · ПРОГНОЗ · РЕКОМЕНДАЦИИ</p>
+          <h1>Планируй день<br><span>с умом.</span></h1>
+          <p class="intro-description">Погода — это не только цифры. Узнай, что надеть и чего ждать от ближайших часов.</p>
+        </div>
+
+        <form class="city-search" id="cityForm">
+          <label for="cityInput">Где смотрим погоду?</label>
+          <div class="search-control">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="cityInput" name="city" type="search" value="Stockholm" placeholder="Например, Stockholm" autocomplete="off" required maxlength="80">
+            <button id="searchButton" type="submit">Показать <span aria-hidden="true">↗</span></button>
+          </div>
+          <p class="search-hint">Введи город на русском или английском</p>
+        </form>
+      </section>
+
+      <div class="demo-banner" id="demoBanner" hidden>
+        <span aria-hidden="true">✳</span>
+        Демонстрационный режим: ниже пример интерфейса, а не реальный прогноз.
+      </div>
+      <div class="notice" id="notice" role="alert" hidden></div>
+
+      <section class="dashboard-grid" aria-label="Погода и рекомендации">
+        <article class="current-card" aria-labelledby="currentHeading">
+          <div class="card-topline">
+            <div>
+              <p class="card-kicker">СЕЙЧАС В</p>
+              <h2 id="currentHeading"><span id="cityName">—</span><span class="country-name" id="countryName"></span></h2>
+            </div>
+            <span class="current-badge"><span class="live-dot"></span> Сейчас</span>
+          </div>
+
+          <div class="current-weather">
+            <div class="weather-symbol" id="currentIcon" aria-hidden="true">🌡️</div>
+            <div class="temperature-block">
+              <div class="temperature" id="currentTemp">—<span>°</span></div>
+              <p id="currentCondition">Ожидаем данные API</p>
+            </div>
+          </div>
+
+          <div class="weather-stats">
+            <div class="stat-item">
+              <span class="stat-icon" aria-hidden="true">↗</span>
+              <div><span class="stat-label">Ощущается как</span><strong id="feelsLike">—</strong></div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon" aria-hidden="true">≋</span>
+              <div><span class="stat-label">Ветер</span><strong id="windSpeed">—</strong></div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon" aria-hidden="true">⌁</span>
+              <div><span class="stat-label">Вероятность дождя</span><strong id="rainChance">—</strong></div>
+            </div>
+          </div>
+          <p class="updated-line" id="updatedAt">Нет загруженных данных</p>
+        </article>
+
+        <article class="recommendation-card" aria-labelledby="recommendationHeading">
+          <div class="recommendation-top">
+            <span class="recommendation-icon" aria-hidden="true">✳</span>
+            <span class="recommendation-label">СОВЕТ НА ДЕНЬ</span>
+          </div>
+          <h2 id="recommendationHeading">Ожидаем прогноз</h2>
+          <p id="recommendationText">Когда подключим прогноз, здесь появится рекомендация с учётом температуры, ветра и осадков.</p>
+          <div class="recommendation-bottom">
+            <span class="recommendation-mini-icon" aria-hidden="true">☂</span>
+            <span>Пусть погода не застанет врасплох</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="forecast-section" aria-labelledby="forecastHeading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">НЕ ЗАБУДЬ ПОСМОТРЕТЬ</p>
+            <h2 id="forecastHeading">Ближайшие 24 часа</h2>
+          </div>
+          <span class="forecast-caption">Почасовой прогноз</span>
+        </div>
+        <div class="forecast-grid" id="hourlyForecast" aria-live="polite">
+          <div class="forecast-placeholder">Почасовой прогноз появится здесь после подключения API.</div>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <span>WeatherWise <span class="footer-separator">·</span> маленький помощник для больших планов</span>
+        <span>Погодный источник: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a></span>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
