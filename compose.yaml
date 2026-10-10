@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    environment:
+      HTTPS_PROXY: ${WEATHERWISE_HTTPS_PROXY:-}
+      HTTP_PROXY: ${WEATHERWISE_HTTP_PROXY:-}
+      NO_PROXY: localhost,127.0.0.1,backend,frontend
+
+    restart: unless-stopped
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O - http://127.0.0.1:8080/api/health | grep -q weather-api
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    ports:
+      - "8080:80"
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    restart: unless-stopped

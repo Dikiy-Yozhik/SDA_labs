@@ -1,3 +1,0 @@
-Hello Git
-New line
-Another line

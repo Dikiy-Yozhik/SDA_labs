@@ -1,2 +1,0 @@
-Review example
-This file demonstrates the review workflow in GitHub.
