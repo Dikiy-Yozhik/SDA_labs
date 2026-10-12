@@ -5,62 +5,82 @@
 
   vars:
     app_dir: /opt/weatherwise
-    project_root: "{{ playbook_dir }}/.."
+    source_dir: "{{ playbook_dir }}/.."
 
   tasks:
-    - name: install docker and compose packages
+    - name: check docker cli
+      ansible.builtin.command: docker --version
+      register: docker_cli
+      changed_when: false
+      failed_when: false
+
+    - name: install docker if missing
       ansible.builtin.apt:
-        name:
-          - docker.io
-          - docker-compose-v2
+        name: docker.io
         state: present
         update_cache: true
         cache_valid_time: 3600
+      when: docker_cli.rc != 0
 
-    - name: ensure docker is enabled and running
+    - name: check docker compose
+      ansible.builtin.command: docker compose version
+      register: compose_cli
+      changed_when: false
+      failed_when: false
+
+    - name: install docker compose if missing
+      ansible.builtin.apt:
+        name: docker-compose-v2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      when: compose_cli.rc != 0
+
+    - name: enable and start docker
       ansible.builtin.service:
         name: docker
-        state: started
         enabled: true
+        state: started
 
     - name: create application directory
       ansible.builtin.file:
         path: "{{ app_dir }}"
         state: directory
-        owner: root
-        group: root
         mode: "0755"
 
     - name: copy compose file
       ansible.builtin.copy:
-        src: "{{ project_root }}/compose.yaml"
+        src: "{{ source_dir }}/compose.yaml"
         dest: "{{ app_dir }}/compose.yaml"
-        owner: root
-        group: root
         mode: "0644"
+      notify: rebuild and start weatherwise
 
-    - name: copy frontend source and build context
+    - name: copy frontend files
       ansible.builtin.copy:
-        src: "{{ project_root }}/frontend/"
+        src: "{{ source_dir }}/frontend/"
         dest: "{{ app_dir }}/frontend/"
-        owner: root
-        group: root
+        directory_mode: "0755"
+      notify: rebuild and start weatherwise
 
-    - name: copy backend source and build context
+    - name: copy backend files
       ansible.builtin.copy:
-        src: "{{ project_root }}/backend/"
+        src: "{{ source_dir }}/backend/"
         dest: "{{ app_dir }}/backend/"
-        owner: root
-        group: root
+        directory_mode: "0755"
+      notify: rebuild and start weatherwise
 
-    - name: validate compose configuration
-      ansible.builtin.command:
-        cmd: docker compose -f compose.yaml config --quiet
-        chdir: "{{ app_dir }}"
-      changed_when: false
+    - name: run handlers before checking application state
+      ansible.builtin.meta: flush_handlers
 
-    - name: ensure weatherwise services are running
+    - name: ensure weatherwise is running
       community.docker.docker_compose_v2:
         project_src: "{{ app_dir }}"
         state: present
         build: policy
+
+  handlers:
+    - name: rebuild and start weatherwise
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        state: present
+        build: always

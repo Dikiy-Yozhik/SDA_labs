@@ -19,7 +19,7 @@ jobs:
         run: docker compose -f compose.yaml -f .github/compose.trivy.yaml build
 
       - name: scan frontend image
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: weatherwise-frontend:ci
           format: table
@@ -29,7 +29,7 @@ jobs:
           severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
 
       - name: scan backend image
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: weatherwise-backend:ci
           format: table
