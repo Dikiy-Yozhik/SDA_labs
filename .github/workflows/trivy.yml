@@ -1,0 +1,39 @@
+name: trivy image scan
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: build compose images with ci tags
+        run: docker compose -f compose.yaml -f .github/compose.trivy.yaml build
+
+      - name: scan frontend image
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: weatherwise-frontend:ci
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+
+      - name: scan backend image
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: weatherwise-backend:ci
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL

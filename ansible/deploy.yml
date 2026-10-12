@@ -1,0 +1,66 @@
+---
+- name: deploy weatherwise
+  hosts: weather_server
+  become: true
+
+  vars:
+    app_dir: /opt/weatherwise
+    project_root: "{{ playbook_dir }}/.."
+
+  tasks:
+    - name: install docker and compose packages
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: ensure docker is enabled and running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: create application directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: copy compose file
+      ansible.builtin.copy:
+        src: "{{ project_root }}/compose.yaml"
+        dest: "{{ app_dir }}/compose.yaml"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: copy frontend source and build context
+      ansible.builtin.copy:
+        src: "{{ project_root }}/frontend/"
+        dest: "{{ app_dir }}/frontend/"
+        owner: root
+        group: root
+
+    - name: copy backend source and build context
+      ansible.builtin.copy:
+        src: "{{ project_root }}/backend/"
+        dest: "{{ app_dir }}/backend/"
+        owner: root
+        group: root
+
+    - name: validate compose configuration
+      ansible.builtin.command:
+        cmd: docker compose -f compose.yaml config --quiet
+        chdir: "{{ app_dir }}"
+      changed_when: false
+
+    - name: ensure weatherwise services are running
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        state: present
+        build: policy

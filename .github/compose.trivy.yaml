@@ -1,0 +1,7 @@
+# CI override: tag the same images built by the Compose services for scanning.
+# This assumes services in compose.yaml are named `frontend` and `backend`.
+services:
+  frontend:
+    image: weatherwise-frontend:ci
+  backend:
+    image: weatherwise-backend:ci
